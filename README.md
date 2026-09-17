@@ -45,8 +45,17 @@
 - [ ] DeepSeek-R1
 - [ ] LoRA
 
-### 5. 보강
-- [ ] Stanford CS336
-- [ ] RLHF Book (Nathan Lambert)
-- [ ] HF Ultra-Scale Playbook
+- [ ] FlashAttention
+- [ ] PagedAttention (vLLM)
+
+### 5. 보강 (Karpathy 강의가 다루지 않는 영역)
+- [ ] Stanford CS336 — 시스템·스케일링·데이터·평가
+- [ ] RLHF Book (Nathan Lambert) — post-training 이론
+- [ ] HF Smol Training Playbook — 실제 학습 의사결정(ablation, 하이퍼파라미터, 데이터 믹스)
+- [ ] HF Ultra-Scale Playbook — 분산 학습
 - [ ] (선택) nanochat 코드 리딩
+
+### 6. 선택 (관심사에 따라)
+- [ ] 3Blue1Brown 신경망 시리즈 5~7장 — attention 시각적 직관 (기초가 흔들릴 때)
+- [ ] The Illustrated Transformer / The Annotated Transformer — 자료 제작 시 도식 참고
+- [ ] Mechanistic interpretability 입문 — A Mathematical Framework for Transformer Circuits
