@@ -1,0 +1,19 @@
+# 자막 원문 (저작권) / 임시 파일
+transcripts/
+*.transcript.json
+*.transcript.txt
+~$*.pptx
+
+# 환경
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# 모델·데이터 (용량)
+*.pth
+*.pt
+*.safetensors
+*.jsonl
+out/
+checkpoints/
