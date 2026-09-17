@@ -13,6 +13,8 @@
 
 원칙: 마크다운 노트가 원본, PPT는 그 결과물. 자막 원문·데이터셋·체크포인트는 커밋하지 않는다.
 
+다이어그램: 모든 도식은 [diagram-design](https://github.com/cathrynlavery/diagram-design) 스킬(MIT, v2.6.27)의 디자인 시스템으로 통일한다. 원본은 각 자료 폴더의 `diagrams/*.html`(인라인 SVG), 슬라이드에는 거기서 export한 PNG를 넣는다.
+
 ## 로드맵
 
 ### 1. 큰 그림
