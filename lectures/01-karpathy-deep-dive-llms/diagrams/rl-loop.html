@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RL: 풀이를 만들고, 채점하고, 잘 된 것으로 학습한다</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Serif:ital@0;1&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --color-paper: #f6f5f2; --color-ink: #1f2023; --color-muted: #55595f; --color-accent: #b3402a;
+      --font-sans: 'Geist', 'Noto Sans KR', system-ui, sans-serif; --font-serif: 'Instrument Serif', 'Noto Serif KR', serif; --font-mono: 'Geist Mono', ui-monospace, monospace; }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; color: var(--color-ink); margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Loop · Deep Dive into LLMs</p>
+    <h1>RL: 풀이를 만들고, 채점하고, 잘 된 것으로 학습한다</h1>
+    <svg viewBox="0 0 1040 690" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rl-loop-title rl-loop-desc">
+      <title id="rl-loop-title">RL: 풀이를 만들고, 채점하고, 잘 된 것으로 학습한다</title>
+      <desc id="rl-loop-desc">문제와 정답에서 출발해 풀이를 여러 개 샘플링하고 정답과 대조한 뒤 좋은 풀이로 학습해 모델 파라미터를 갱신하는 반복 루프.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#55595f"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#b3402a"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4a5a6e"/></marker>
+        <marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7d8188"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f6f5f2"/>
+      <path d="M 600.000 113.726 A 240 240 0 0 1 733.784 230.930" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 755.932 296.000 A 240 240 0 0 1 696.043 503.122" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 594.940 568.000 A 240 240 0 0 1 446.201 568.372" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 344.774 504.000 A 240 240 0 0 1 283.851 297.180" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 305.673 232.000 A 240 240 0 0 1 438.870 114.129" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="371.7" y1="291.8" x2="414.3" y2="305.7" stroke="#7d8188" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow-soft)"/>
+      <rect x="347.0200484956961" y="308.74171272955243" width="60" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="377.0200484956961" y="317.74171272955243" fill="#7d8188" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">WEIGHTS</text>
+      <rect x="440" y="68" width="160" height="64" rx="6" fill="#f6f5f2"/>
+      <rect x="440" y="68" width="160" height="64" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="520.0" y="98.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">문제 + 정답</text>
+      <text x="520.0" y="112.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">"사과 값은?" · 답 3</text>
+      <rect x="668" y="232" width="160" height="64" rx="6" fill="#f6f5f2"/>
+      <rect x="668" y="232" width="160" height="64" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="748.0" y="262.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">풀이를 여러 개 샘플링</text>
+      <text x="748.0" y="276.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">수천~수백만 개 · 확률적</text>
+      <rect x="580" y="504" width="160" height="64" rx="6" fill="#f6f5f2"/>
+      <rect x="580" y="504" width="160" height="64" rx="6" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/>
+      <rect x="588" y="510" width="33" height="12" rx="2" fill="transparent" stroke="#b3402a" stroke-opacity="0.4" stroke-width="0.8"/>
+      <text x="604.5" y="519" fill="#b3402a" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CHECK</text>
+      <text x="660.0" y="543.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">정답과 대조</text>
+      <text x="660.0" y="557.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">맞음 / 틀림 채점</text>
+      <rect x="300" y="504" width="160" height="64" rx="6" fill="#f6f5f2"/>
+      <rect x="300" y="504" width="160" height="64" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="380.0" y="534.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">좋은 풀이 선택</text>
+      <text x="380.0" y="548.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">맞고 짧은 것</text>
+      <rect x="212" y="232" width="160" height="64" rx="6" fill="#f6f5f2"/>
+      <rect x="212" y="232" width="160" height="64" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <rect x="220" y="238" width="38" height="12" rx="2" fill="transparent" stroke="#1f2023" stroke-opacity="0.4" stroke-width="0.8"/>
+      <text x="239.0" y="247" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">UPDATE</text>
+      <text x="292.0" y="271.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">그 풀이로 학습</text>
+      <text x="292.0" y="285.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">확률을 높인다</text>
+      <rect x="420.0" y="288.0" width="200" height="104" rx="6" fill="#1f2023"/>
+      <text x="520" y="338" fill="#f6f5f2" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">모델 파라미터</text>
+      <text x="520" y="354" fill="#f6f5f2" fill-opacity="0.75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">사고 전략이 쌓인다</text>
+      <line x1="40" y1="632" x2="1000" y2="632" stroke="rgba(31,32,35,0.10)" stroke-width="0.8"/>
+      <text x="40" y="648" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+      <rect x="40" y="658" width="14" height="10" rx="2" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="60" y="666" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">단계 (시계 방향)</text>
+      <rect x="163.4" y="658" width="14" height="10" rx="2" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/>
+      <text x="183.4" y="666" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">정답 검사 · 사람이 없어도 된다</text>
+      <rect x="348.0" y="658" width="14" height="10" rx="2" fill="#1f2023" stroke="#1f2023" stroke-width="1"/>
+      <text x="368.0" y="666" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">축적되는 상태</text>
+      <text x="1000" y="666" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif" font-style="italic" text-anchor="end">점선은 파라미터로의 쓰기. 수만 개 문제에 대해 반복한다.</text>
+
+    </svg>
+  </div>
+</body>
+</html>

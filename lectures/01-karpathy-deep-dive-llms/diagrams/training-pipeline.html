@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM 학습 파이프라인: 세 단계와 세 결과물</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Serif:ital@0;1&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --color-paper: #f6f5f2; --color-ink: #1f2023; --color-muted: #55595f; --color-accent: #b3402a;
+      --font-sans: 'Geist', 'Noto Sans KR', system-ui, sans-serif; --font-serif: 'Instrument Serif', 'Noto Serif KR', serif; --font-mono: 'Geist Mono', ui-monospace, monospace; }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; color: var(--color-ink); margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Architecture · Deep Dive into LLMs</p>
+    <h1>LLM 학습 파이프라인: 세 단계와 세 결과물</h1>
+    <svg viewBox="0 0 1000 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="training-pipeline-title training-pipeline-desc">
+      <title id="training-pipeline-title">LLM 학습 파이프라인: 세 단계와 세 결과물</title>
+      <desc id="training-pipeline-desc">인터넷 문서로 사전학습해 base 모델을 만들고, 대화 데이터로 SFT해 어시스턴트를 만들고, 연습문제로 RL해 사고 전략을 얻는 세 단계 흐름.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#55595f"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#b3402a"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4a5a6e"/></marker>
+        <marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7d8188"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f6f5f2"/>
+      <text x="40" y="92" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">DATA</text>
+      <text x="40" y="212" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">STAGE</text>
+      <text x="40" y="332" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">ARTIFACT</text>
+      <line x1="200" y1="112" x2="200" y2="182" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="200" y1="232" x2="200" y2="302" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="500" y1="112" x2="500" y2="182" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="500" y1="232" x2="500" y2="302" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="800" y1="112" x2="800" y2="182" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="800" y1="232" x2="800" y2="302" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 300,328 H 342.0 Q 350.0,328 350.0,320 V 216 Q 350.0,208 358.0,208 H 398" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 600,328 H 642.0 Q 650.0,328 650.0,320 V 216 Q 650.0,208 658.0,208 H 698" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="100.0" y="64" width="200" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="100.0" y="64" width="200" height="48" rx="6" fill="rgba(85,89,95,0.10)" stroke="#7d8188" stroke-width="0.8"/>
+      <text x="200.0" y="86.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">인터넷 문서</text>
+      <text x="200.0" y="100.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">FineWeb · 15조 토큰</text>
+      <rect x="100.0" y="184" width="200" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="100.0" y="184" width="200" height="48" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <rect x="108.0" y="190" width="38" height="12" rx="2" fill="transparent" stroke="#1f2023" stroke-opacity="0.4" stroke-width="0.8"/>
+      <text x="127.0" y="199" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">STEP 1</text>
+      <text x="200.0" y="215.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">Pretraining</text>
+      <text x="200.0" y="229.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">next-token 예측 · 수개월</text>
+      <rect x="100.0" y="304" width="200" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="100.0" y="304" width="200" height="48" rx="6" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/>
+      <text x="200.0" y="326.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">Base model</text>
+      <text x="200.0" y="340.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">인터넷 문서 시뮬레이터</text>
+      <rect x="400.0" y="64" width="200" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="400.0" y="64" width="200" height="48" rx="6" fill="rgba(85,89,95,0.10)" stroke="#7d8188" stroke-width="0.8"/>
+      <text x="500.0" y="86.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">대화 데이터</text>
+      <text x="500.0" y="100.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">라벨러 작성 · ~100만 개</text>
+      <rect x="400.0" y="184" width="200" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="400.0" y="184" width="200" height="48" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <rect x="408.0" y="190" width="38" height="12" rx="2" fill="transparent" stroke="#1f2023" stroke-opacity="0.4" stroke-width="0.8"/>
+      <text x="427.0" y="199" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">STEP 2</text>
+      <text x="500.0" y="215.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">Supervised finetuning</text>
+      <text x="500.0" y="229.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">같은 알고리즘, 데이터만 교체</text>
+      <rect x="400.0" y="304" width="200" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="400.0" y="304" width="200" height="48" rx="6" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/>
+      <text x="500.0" y="326.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">SFT model</text>
+      <text x="500.0" y="340.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">라벨러의 시뮬레이션</text>
+      <rect x="700.0" y="64" width="200" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="700.0" y="64" width="200" height="48" rx="6" fill="rgba(85,89,95,0.10)" stroke="#7d8188" stroke-width="0.8"/>
+      <text x="800.0" y="86.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">연습문제 + 정답 / 선호 순서</text>
+      <text x="800.0" y="100.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">검증 가능 · 검증 불가능</text>
+      <rect x="700.0" y="184" width="200" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="700.0" y="184" width="200" height="48" rx="6" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/>
+      <rect x="708.0" y="190" width="38" height="12" rx="2" fill="transparent" stroke="#b3402a" stroke-opacity="0.4" stroke-width="0.8"/>
+      <text x="727.0" y="199" fill="#b3402a" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">STEP 3</text>
+      <text x="800.0" y="215.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">Reinforcement learning</text>
+      <text x="800.0" y="229.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">guess and check · RLHF 포함</text>
+      <rect x="700.0" y="304" width="200" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="700.0" y="304" width="200" height="48" rx="6" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/>
+      <text x="800.0" y="326.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">RL model</text>
+      <text x="800.0" y="340.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">사고 전략이 창발</text>
+      <line x1="40" y1="384" x2="960" y2="384" stroke="rgba(31,32,35,0.10)" stroke-width="0.8"/>
+      <text x="40" y="400" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+      <rect x="40" y="410" width="14" height="10" rx="2" fill="rgba(85,89,95,0.10)" stroke="#7d8188" stroke-width="0.8"/>
+      <text x="60" y="418" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">데이터</text>
+      <rect x="117.5" y="410" width="14" height="10" rx="2" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="137.5" y="418" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">학습 단계</text>
+      <rect x="208.6" y="410" width="14" height="10" rx="2" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/>
+      <text x="228.6" y="418" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">결과물 (파라미터)</text>
+      <rect x="335.4" y="410" width="14" height="10" rx="2" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/>
+      <text x="355.4" y="418" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">가장 새로운 단계</text>
+      <text x="960" y="418" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif" font-style="italic" text-anchor="end">앞 단계의 결과물이 다음 단계의 출발점</text>
+
+    </svg>
+  </div>
+</body>
+</html>

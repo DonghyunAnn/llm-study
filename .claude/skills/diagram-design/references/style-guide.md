@@ -2,7 +2,7 @@
 
 **The single source of truth for colors, typography, and tokens.** Every diagram draws from this — not from hex values inlined in other reference files. If you want to change the visual skin of Diagram Design, change this file.
 
-Default skin is a cool editorial palette — white-smoke paper, jet-black ink, atomic-tangerine accent, blue-slate muted. It's designed to look good out of the box; swap these values (or run [`onboarding.md`](onboarding.md)) and every new diagram inherits the new skin without touching any type-specific logic.
+Skin for llm-study (edited by hand, 2026-09-18): monochrome editorial — warm bone paper, near-black ink, graphite muted, one brick accent. Matches the book's black-and-white minimal style. It's designed to look good out of the box; swap these values (or run [`onboarding.md`](onboarding.md)) and every new diagram inherits the new skin without touching any type-specific logic.
 
 To generate your own from a website URL, see [`onboarding.md`](onboarding.md).
 
@@ -16,16 +16,16 @@ Every token is referred to by **semantic role**, not by its hex value. Type refe
 
 | Role | Purpose | Default (light) | Default (dark) |
 |---|---|---|---|
-| `paper` | Page background, default node fill | `#f5f5f5` (white-smoke) | `#2d3142` (jet-black) |
-| `paper-2` | Diagram container bg, secondary fill | `#ececec` | `#393e53` |
-| `ink` | Primary text, primary stroke | `#2d3142` (jet-black) | `#f5f5f5` (white-smoke) |
-| `muted` | Secondary text, default arrow stroke | `#4f5d75` (blue-slate) | `#bfc0c0` (silver) |
-| `soft` | Sublabels, boundary labels | `#7a8399` | `#8e98ac` |
-| `rule` | Hairline borders | `rgba(45,49,66,0.12)` | `rgba(245,245,245,0.12)` |
-| `rule-solid` | Stronger borders, baselines | `#bfc0c0` (silver) | `rgba(191,192,192,0.25)` |
-| `accent` | Focal / 1–2 max per diagram | `#eb6c36` (atomic-tangerine) | `#f08a59` |
-| `accent-tint` | Fill for accent-bordered boxes | `rgba(235,108,54,0.08)` | `rgba(240,138,89,0.10)` |
-| `link` | HTTP/API calls, external arrows | `#2e5aa8` | `#6a95d8` |
+| `paper` | Page background, default node fill | `#f6f5f2` (warm bone) | `#2d3142` (jet-black) |
+| `paper-2` | Diagram container bg, secondary fill | `#ebeae6` | `#393e53` |
+| `ink` | Primary text, primary stroke | `#1f2023` (near-black) | `#f5f5f5` (white-smoke) |
+| `muted` | Secondary text, default arrow stroke | `#55595f` (graphite) | `#bfc0c0` (silver) |
+| `soft` | Sublabels, boundary labels | `#7d8188` | `#8e98ac` |
+| `rule` | Hairline borders | `rgba(31,32,35,0.12)` | `rgba(245,245,245,0.12)` |
+| `rule-solid` | Stronger borders, baselines | `#c4c4c1` | `rgba(191,192,192,0.25)` |
+| `accent` | Focal / 1–2 max per diagram | `#b3402a` (brick) | `#f08a59` |
+| `accent-tint` | Fill for accent-bordered boxes | `rgba(179,64,42,0.08)` | `rgba(240,138,89,0.10)` |
+| `link` | HTTP/API calls, external arrows | `#4a5a6e` | `#6a95d8` |
 
 > **Brand palette source:** this skin maps to a five-color brand palette — `jet-black #2d3142`, `silver #bfc0c0`, `white-smoke #f5f5f5`, `atomic-tangerine #eb6c36`, `blue-slate #4f5d75`. The `soft`, `rule`, and `link` tokens are derived (lighter slate, ink-at-opacity, and a saturated variant in the blue-slate hue family) to cover roles the brand palette doesn't name directly.
 

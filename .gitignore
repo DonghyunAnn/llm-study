@@ -2,6 +2,7 @@
 transcripts/
 *.transcript.json
 *.transcript.txt
+*.whiteboard.txt
 ~$*.pptx
 
 # 환경
