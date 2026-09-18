@@ -12,6 +12,7 @@
 |---|---|
 | `lectures/` | 강의 정리 노트. `NN-slug/notes.md` (자막 + 강의 repo 기반, 화면 내용은 미반영일 수 있음) |
 | `papers/` | 논문 리뷰. `NN-slug/review.md` + `slides.pptx` |
+| `readings/` | 블로그·기술 보고서 정리 (예: FineWeb) |
 | `minimind-lab/` | minimind 실습 기록: 실험 로그, 직접 고쳐본 패치, 관찰 결과 |
 | `tools/` | 자막 수집 등 보조 스크립트 |
 
