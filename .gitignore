@@ -17,3 +17,12 @@ __pycache__/
 *.jsonl
 out/
 checkpoints/
+
+# 웹북 빌드
+.tools/
+_book/
+.quarto/
+
+/.quarto/
+**/*.quarto_ipynb
+_book_pdf/

@@ -1,0 +1,6 @@
+/*-- scss:defaults --*/
+$font-size-root: 16px;
+$code-block-bg: #f7f7f7;
+/*-- scss:rules --*/
+.callout-note.callout-titled .callout-title { font-weight: 600; }
+pre code { font-size: 0.85em; line-height: 1.5; }

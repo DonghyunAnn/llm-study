@@ -2,6 +2,10 @@
 
 [minimind](https://github.com/jingyaogong/minimind)를 실습 기반으로 삼아 LLM을 처음부터 끝까지 공부하고, 그 과정을 학습 자료로 남기는 저장소.
 
+## 읽기
+
+웹북: https://donghyunann.github.io/llm-study/ (Quarto Book으로 빌드. PDF도 같은 원본에서 생성)
+
 ## 구성
 
 | 폴더 | 내용 |

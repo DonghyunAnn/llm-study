@@ -35,6 +35,13 @@ minimind 기반 LLM 독학 기록 + 학습 자료(강의 정리, 논문 리뷰 �
 - 서버 경로, 회사 관련 정보, 키는 올리지 않는다.
 - 강의 노트는 자막 번역이 아니라 재구성한 정리로 쓰고, 원본 링크와 강의자를 명시한다.
 
+## 웹북 (Quarto Book)
+
+- 모든 노트는 `_quarto.yml`의 chapters에 등록해야 책에 들어간다. 새 노트를 만들면 등록까지가 한 작업이다.
+- 집필 규칙은 `STYLE.md`(책 부록으로도 렌더링됨). 제목에 수동 번호를 넣지 않고, 상호참조는 `{#sec-id}` + `@sec-id`, minimind 대응은 `::: {.callout-note title="minimind 대응"}` 콜아웃을 쓴다.
+- 로컬 빌드: `.tools/quarto-1.10.18/bin/quarto render --to html` (결과 `_book/`), PDF는 `--to typst --output-dir _book_pdf`. 둘 다 gitignore. 커밋 전에 HTML을 한 번 렌더링해 깨진 곳이 없는지 본다.
+- GitHub Pages 배포는 `.github/workflows/book.yml`이 main push마다 수행한다 (저장소 Settings → Pages → Source: GitHub Actions 필요).
+
 ## 도구
 
 - 자막: `python tools/fetch_transcript.py <youtube url>` → `transcripts/` (gitignore 대상). `youtube-transcript-api` 필요.

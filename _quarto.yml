@@ -1,0 +1,39 @@
+project:
+  type: book
+  output-dir: _book
+
+lang: ko
+book:
+  title: "LLM 학습 노트"
+  subtitle: "minimind로 뜯어보는 언어 모델"
+  author: "Donghyun Ahn"
+  date: today
+  repo-url: https://github.com/DonghyunAnn/llm-study
+  repo-actions: [source, issue]
+  search: true
+  chapters:
+    - index.qmd
+    - part: "1부 · 큰 그림"
+      chapters:
+        - lectures/01-karpathy-deep-dive-llms/notes.md
+  appendices:
+    - STYLE.md
+
+format:
+  html:
+    theme: [cosmo, book.scss]
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: false
+    code-copy: true
+    code-line-numbers: false
+    mainfont: "Noto Sans KR, Nanum Gothic, sans-serif"
+    monofont: "JetBrains Mono, D2Coding, monospace"
+  typst:
+    toc: true
+    number-sections: true
+    papersize: a4
+    mainfont: "NanumMyeongjo"
+    monofont: "NanumGothicCoding"
+    keep-typ: false
