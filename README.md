@@ -18,14 +18,25 @@
 ## 로드맵
 
 ### 1. 큰 그림
-- [ ] Karpathy — Deep Dive into LLMs like ChatGPT
+- [ ] Karpathy — Deep Dive into LLMs like ChatGPT (3h31)
 
-### 2. 기초 (Zero to Hero)
-- [ ] micrograd (autograd / backprop)
-- [ ] makemore 시리즈
-- [ ] Let's build GPT
-- [ ] Let's build the GPT Tokenizer
-- [ ] (선택) Let's reproduce GPT-2
+### 2. 기초 (Karpathy Zero to Hero)
+필수 (약 12시간)
+- [ ] micrograd — 역전파 (2h25)
+- [ ] makemore 1 — bigram, 언어 모델링 프레임 (1h57)
+- [ ] makemore 2 — MLP, 임베딩, 학습 루프 (1h15)
+- [ ] Let's build GPT (1h56)
+- [ ] Let's build the GPT Tokenizer (2h13)
+
+보강 (minimind 실습 뒤에)
+- [ ] Let's reproduce GPT-2 (124M) — 실전 사전학습, minimind `train_pretrain.py`와 직접 비교 (4h01)
+- [ ] makemore 3 — 활성값·기울기, BatchNorm, 초기화 (1h55)
+
+선택
+- [ ] makemore 4 — 역전파 수동 구현 (1h55)
+- [ ] makemore 5 — WaveNet (0h56). Transformer 경로와 무관, 건너뛰어도 됨
+- [ ] How I use LLMs (2h11). 사용법 강의, 학습 로드맵과 무관
+- [ ] [1hr Talk] Intro to LLMs (0h59). 2023년 강연, Deep Dive가 상위 호환
 
 ### 3. minimind 실습
 - [ ] `model_minimind.py` 안 보고 직접 구현 → diff
