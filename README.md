@@ -18,7 +18,7 @@
 ## 로드맵
 
 ### 1. 큰 그림
-- [ ] Karpathy — Deep Dive into LLMs like ChatGPT (3h31)
+- [ ] Karpathy — Deep Dive into LLMs like ChatGPT (3h31) — [정리 노트](lectures/01-karpathy-deep-dive-llms/notes.md)
 
 ### 2. 기초 (Karpathy Zero to Hero)
 필수 (약 12시간)
