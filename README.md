@@ -27,7 +27,7 @@
 
 ### 2. 기초 (Karpathy Zero to Hero)
 필수 (약 12시간)
-- [ ] micrograd — 역전파 (2h25)
+- [ ] micrograd — 역전파 (2h25) — [정리 노트](lectures/02-karpathy-micrograd/notes.md)
 - [ ] makemore 1 — bigram, 언어 모델링 프레임 (1h57)
 - [ ] makemore 2 — MLP, 임베딩, 학습 루프 (1h15)
 - [ ] Let's build GPT (1h56)

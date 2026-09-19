@@ -16,6 +16,9 @@ book:
     - part: "1부 · 큰 그림"
       chapters:
         - lectures/01-karpathy-deep-dive-llms/notes.md
+    - part: "2부 · 기초"
+      chapters:
+        - lectures/02-karpathy-micrograd/notes.md
     - part: "읽을거리"
       chapters:
         - readings/01-fineweb/notes.md
