@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>makemore 1 · 두 길, 같은 모델</title><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Serif:ital@0;1&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--color-paper:#f6f5f2;--color-ink:#1f2023;--color-muted:#55595f;--color-accent:#b3402a;--font-sans:'Geist','Noto Sans KR',system-ui,sans-serif;--font-serif:'Instrument Serif','Noto Serif KR',serif;--font-mono:'Geist Mono',ui-monospace,monospace}
+body{font-family:var(--font-sans);background:var(--color-paper);color:var(--color-ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:3rem 2rem}.frame{max-width:1200px;width:100%}.eyebrow{font-family:var(--font-mono);font-size:.66rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--color-muted);margin-bottom:.5rem}h1{font-family:var(--font-serif);font-size:clamp(1.5rem,2.4vw + .75rem,2rem);font-weight:400;letter-spacing:-.02em;line-height:1.15;color:var(--color-ink);margin-bottom:1.5rem}svg{width:100%;min-width:900px;display:block}</style></head>
+<body><div class="frame"><p class="eyebrow">Architecture · makemore 1</p><h1>두 길, 같은 모델: counting과 gradient</h1>
+    <svg viewBox="0 0 1080 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="two-roads-title two-roads-desc">
+      <title id="two-roads-title">bigram 모델에 이르는 두 경로</title>
+      <desc id="two-roads-desc">names.txt의 bigram 쌍에서 출발해, 위 경로는 27×27 카운트 N을 세어 행 정규화한 확률표 P를 만들고, 아래 경로는 one-hot 입력을 W에 곱해 logits, exp, 행 정규화(softmax)로 확률을 만들고 NLL loss의 기울기로 W를 100회 갱신한다. 두 결과는 같은 모델이다.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#55595f"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#b3402a"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4a5a6e"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f6f5f2"/>
+      <rect x="230" y="78" width="826" height="108" rx="8" fill="rgba(31,32,35,0.02)" stroke="rgba(31,32,35,0.10)" stroke-width="0.8"/>
+      <rect x="244" y="82" width="125" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="252" y="91" fill="rgba(31,32,35,0.45)" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.14em">COUNTING · 세고 나눈다</text>
+      <rect x="230" y="236" width="826" height="160" rx="8" fill="rgba(31,32,35,0.02)" stroke="rgba(31,32,35,0.10)" stroke-width="0.8"/>
+      <rect x="244" y="240" width="138" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="252" y="249" fill="rgba(31,32,35,0.45)" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.14em">GRADIENT · 예측하고 고친다</text>
+      <path d="M 190,178 H 277 Q 285,178 285,170 V 142 Q 285,134 293,134 H 380" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 190,202 H 212 Q 220,202 220,210 V 286 Q 220,294 228,294 H 250" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="300.8" y="114" width="72.4" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="337" y="123" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">N[x, y] += 1</text>
+      <rect x="148.0" y="242" width="60.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="178" y="251" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">F.one_hot</text>
+      <line x1="550" y1="134" x2="710" y2="134" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="562.6" y="114" width="134.8" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="630" y="123" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">(N+1) / rowsum · keepdim</text>
+      <line x1="350" y1="294" x2="410" y2="294" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="363.0" y="274" width="34.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="380" y="283" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">@ W</text>
+      <line x1="520" y1="294" x2="580" y2="294" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="528.0" y="274" width="44.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="550" y="283" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">.exp()</text>
+      <line x1="670" y1="294" x2="730" y2="294" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="674.0" y="274" width="52.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="700" y="283" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">/ rowsum</text>
+      <line x1="840" y1="294" x2="900" y2="294" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="843.0" y="274" width="54.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="870" y="283" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">−log p[y]</text>
+      <path d="M 970,318 V 344 Q 970,352 962,352 H 473 Q 465,352 465,344 V 318" fill="none" stroke="#55595f" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <rect x="572.0" y="360" width="270.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="707" y="369" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">loss.backward() · W.data += −50 · W.grad · 100회 반복</text>
+      <line x1="465" y1="158" x2="465" y2="270" stroke="#55595f" stroke-width="1" stroke-dasharray="4,3"/>
+      <rect x="410.0" y="206" width="110.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="465" y="215" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">W.exp()가 N의 역할</text>
+      <line x1="785" y1="158" x2="785" y2="270" stroke="#b3402a" stroke-width="1" stroke-dasharray="4,3"/>
+      <rect x="680.0" y="206" width="210.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="785" y="215" fill="#b3402a" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">거의 같은 확률표 · 데이터 NLL 2.454 vs 2.475</text>
+      <rect x="40" y="166" width="150" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="40" y="166" width="150" height="48" rx="6" fill="rgba(85,89,95,0.10)" stroke="#7d8188" stroke-width="0.8"/>
+      <text x="115.0" y="188.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">bigram (x, y) 쌍</text>
+      <text x="115.0" y="202.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">228,146개 · 32,033 이름</text>
+      <text x="115.0" y="160" fill="#7d8188" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">names.txt</text>
+      <rect x="380" y="110" width="170" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="380" y="110" width="170" height="48" rx="6" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/>
+      <text x="465.0" y="132.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">N: 27×27 counts</text>
+      <text x="465.0" y="146.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">int32 · 행=앞 글자, 열=다음 글자</text>
+      <rect x="710" y="110" width="150" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="710" y="110" width="150" height="48" rx="6" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/>
+      <text x="785.0" y="132.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">P: 27×27 probs</text>
+      <text x="785.0" y="146.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">각 행의 합 = 1</text>
+      <rect x="250" y="270" width="100" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="250" y="270" width="100" height="48" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="300.0" y="292.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">one-hot</text>
+      <text x="300.0" y="306.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">xenc (n, 27)</text>
+      <rect x="410" y="270" width="110" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="410" y="270" width="110" height="48" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="465.0" y="292.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">logits</text>
+      <text x="465.0" y="306.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">xenc @ W = W[x]</text>
+      <rect x="580" y="270" width="90" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="580" y="270" width="90" height="48" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="625.0" y="292.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">counts</text>
+      <text x="625.0" y="306.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">exp → 양수</text>
+      <rect x="730" y="270" width="110" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="730" y="270" width="110" height="48" rx="6" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/>
+      <text x="785.0" y="292.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">probs</text>
+      <text x="785.0" y="306.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">softmax</text>
+      <rect x="900" y="270" width="140" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="900" y="270" width="140" height="48" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="970.0" y="292.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">loss</text>
+      <text x="970.0" y="306.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">NLL + 0.01·mean(W²)</text>
+      <line x1="40" y1="410" x2="1040" y2="410" stroke="rgba(31,32,35,0.10)" stroke-width="0.8"/>
+      <text x="40" y="426" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+      <rect x="40" y="436" width="14" height="10" rx="2" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/><text x="60" y="444" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">두 경로의 결과 (다음 글자 확률표)</text>
+      <rect x="270" y="436" width="14" height="10" rx="2" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/><text x="290" y="444" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">저장된 표 (파라미터)</text>
+      <line x1="430" y1="441" x2="450" y2="441" stroke="#55595f" stroke-width="1" stroke-dasharray="4,3"/><text x="456" y="444" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">동치 관계 · 학습 루프의 되돌아가는 화살표</text>
+      <text x="1040" y="444" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif" font-style="italic" text-anchor="end">softmax = exp 후 행 정규화. NLL = 정답 열 probs[arange, y]의 −log 평균.</text>
+    </svg></div></body></html>
