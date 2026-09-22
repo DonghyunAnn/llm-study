@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>makemore 2 · MLP 언어 모델</title><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Serif:ital@0;1&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--color-paper:#f6f5f2;--color-ink:#1f2023;--color-muted:#55595f;--color-accent:#b3402a;--font-sans:'Geist','Noto Sans KR',system-ui,sans-serif;--font-serif:'Instrument Serif','Noto Serif KR',serif;--font-mono:'Geist Mono',ui-monospace,monospace}
+body{font-family:var(--font-sans);background:var(--color-paper);color:var(--color-ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:3rem 2rem}.frame{max-width:1200px;width:100%}.eyebrow{font-family:var(--font-mono);font-size:.66rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--color-muted);margin-bottom:.5rem}h1{font-family:var(--font-serif);font-size:clamp(1.5rem,2.4vw + .75rem,2rem);font-weight:400;letter-spacing:-.02em;line-height:1.15;color:var(--color-ink);margin-bottom:1.5rem}svg{width:100%;min-width:900px;display:block}</style></head>
+<body><div class="frame"><p class="eyebrow">Architecture · makemore 2</p><h1>MLP 언어 모델: 글자 3개 → 임베딩 → 은닉층 → 다음 글자</h1>
+    <svg viewBox="0 0 1080 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="mlp-title mlp-desc">
+      <title id="mlp-title">Bengio 2003 MLP 언어 모델을 글자 단위로 옮긴 구조</title>
+      <desc id="mlp-desc">앞 글자 3개의 정수 인덱스가 공유 lookup 표 C에서 2차원 벡터로 바뀌고, view로 이어 붙여 6차원이 된 뒤 tanh 은닉층 100개를 거쳐 27개 logits가 되고 cross entropy loss로 학습된다. 역전파는 C까지 흐른다.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#55595f"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#b3402a"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4a5a6e"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f6f5f2"/>
+      <line x1="190" y1="124" x2="250" y2="124" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="203.0" y="104" width="34.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="220" y="113" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">C[X]</text>
+      <line x1="400" y1="124" x2="460" y2="124" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="406.0" y="104" width="48.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="430" y="113" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">(n,3,2)</text>
+      <line x1="580" y1="124" x2="640" y2="124" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="590.0" y="104" width="40.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="610" y="113" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">(n,6)</text>
+      <line x1="790" y1="124" x2="850" y2="124" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="795.0" y="104" width="50.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="820" y="113" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">(n,100)</text>
+      <line x1="945" y1="148" x2="945" y2="220" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="780.0" y="176" width="150.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="855" y="185" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">F.cross_entropy(logits, Y)</text>
+      <path d="M 900,268 V 296 Q 900,304 892,304 H 333 Q 325,304 325,296 V 148" fill="none" stroke="#55595f" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <rect x="412.0" y="312" width="400.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="612" y="321" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">loss.backward() · 모든 파라미터 p.data += −lr · p.grad  (C, W1, b1, W2, b2 = 3,481개)</text>
+      <rect x="40" y="100" width="150" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="40" y="100" width="150" height="48" rx="6" fill="rgba(85,89,95,0.10)" stroke="#7d8188" stroke-width="0.8"/>
+      <text x="115.0" y="122.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">앞 글자 3개</text>
+      <text x="115.0" y="136.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">X: (n, 3) 정수 인덱스</text>
+      <text x="115.0" y="94" fill="#7d8188" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">CONTEXT · block_size = 3</text>
+      <rect x="250" y="100" width="150" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="250" y="100" width="150" height="48" rx="6" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/>
+      <text x="325.0" y="122.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">C: 27×2 lookup</text>
+      <text x="325.0" y="136.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">2-dim · 세 자리가 공유</text>
+      <text x="325.0" y="94" fill="#7d8188" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">EMBEDDING</text>
+      <rect x="460" y="100" width="120" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="460" y="100" width="120" height="48" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="520.0" y="122.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">view(-1, 6)</text>
+      <text x="520.0" y="136.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">이어 붙이기 · 복사 없음</text>
+      <rect x="640" y="100" width="150" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="640" y="100" width="150" height="48" rx="6" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/>
+      <text x="715.0" y="122.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">tanh(· @ W1 + b1)</text>
+      <text x="715.0" y="136.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">은닉 100 뉴런 · (6→100)</text>
+      <text x="715.0" y="94" fill="#7d8188" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">HIDDEN</text>
+      <rect x="850" y="100" width="190" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="850" y="100" width="190" height="48" rx="6" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/>
+      <text x="945.0" y="122.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">logits = h @ W2 + b2</text>
+      <text x="945.0" y="136.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">27개 · (100→27)</text>
+      <text x="945.0" y="94" fill="#7d8188" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">OUTPUT</text>
+      <rect x="850" y="220" width="190" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="850" y="220" width="190" height="48" rx="6" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/>
+      <text x="945.0" y="242.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">loss (NLL)</text>
+      <text x="945.0" y="256.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">softmax → −log p[y] 평균</text>
+      <line x1="40" y1="342" x2="1040" y2="342" stroke="rgba(31,32,35,0.10)" stroke-width="0.8"/>
+      <text x="40" y="358" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+      <rect x="40" y="368" width="14" height="10" rx="2" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/><text x="60" y="376" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">학습되는 파라미터: C, W1, b1, W2, b2</text>
+      <rect x="300" y="368" width="14" height="10" rx="2" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/><text x="320" y="376" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">최적화 대상</text>
+      <rect x="420" y="368" width="14" height="10" rx="2" fill="rgba(85,89,95,0.10)" stroke="#7d8188" stroke-width="0.8"/><text x="440" y="376" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">입력 데이터 (학습 안 됨)</text>
+      <text x="1040" y="376" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif" font-style="italic" text-anchor="end">Adapted from Bengio et al. 2003, Figure 1 (y = b + U·tanh(d + Hx); 이 강의는 직접 연결 W를 쓰지 않는다). 단어 17,000개 → 글자 27개.</text>
+    </svg></div></body></html>
