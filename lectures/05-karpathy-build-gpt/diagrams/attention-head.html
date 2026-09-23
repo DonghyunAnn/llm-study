@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Let's build GPT · self-attention head</title><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Serif:ital@0;1&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--color-paper:#f6f5f2;--color-ink:#1f2023;--color-muted:#55595f;--color-accent:#b3402a;--font-sans:'Geist','Noto Sans KR',system-ui,sans-serif;--font-serif:'Instrument Serif','Noto Serif KR',serif;--font-mono:'Geist Mono',ui-monospace,monospace}
+body{font-family:var(--font-sans);background:var(--color-paper);color:var(--color-ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:3rem 2rem}.frame{max-width:1200px;width:100%}.eyebrow{font-family:var(--font-mono);font-size:.66rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--color-muted);margin-bottom:.5rem}h1{font-family:var(--font-serif);font-size:clamp(1.5rem,2.4vw + .75rem,2rem);font-weight:400;letter-spacing:-.02em;line-height:1.15;color:var(--color-ink);margin-bottom:1.5rem}svg{width:100%;min-width:900px;display:block}</style></head>
+<body><div class="frame"><p class="eyebrow">Data flow · Let's build GPT</p><h1>Self-attention head 하나: 무엇을 찾고, 무엇을 갖고, 무엇을 주나</h1>
+    <svg viewBox="0 0 1080 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="attention-head-title attention-head-desc">
+      <title id="attention-head-title">self-attention head 하나의 텐서 흐름</title>
+      <desc id="attention-head-desc">입력 x에서 query, key, value를 각각 선형 변환으로 만들고, q와 k의 내적을 head_size의 제곱근으로 나눠 affinity를 얻고, 미래 위치를 −inf로 가린 뒤 softmax로 행마다 합이 1인 가중치를 만들어 value의 가중 평균을 출력한다.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#55595f"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#b3402a"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4a5a6e"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f6f5f2"/>
+      <path d="M 160,202 H 187 Q 195,202 195,194 V 120 Q 195,112 203,112 H 230" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="160" y1="214" x2="230" y2="214" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 160,226 H 187 Q 195,226 195,234 V 304 Q 195,312 203,312 H 230" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 360,112 H 387 Q 395,112 395,120 V 152 Q 395,160 403,160 H 430" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 360,212 H 387 Q 395,212 395,204 V 176 Q 395,168 403,168 H 430" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="580" y1="164" x2="650" y2="164" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="597.0" y="144" width="36.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="615" y="153" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">mask</text>
+      <line x1="780" y1="164" x2="850" y2="164" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="793.0" y="144" width="44.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="815" y="153" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">dim=-1</text>
+      <rect x="945.0" y="254" width="50.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="970" y="263" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">dropout</text>
+      <line x1="915" y1="188" x2="915" y2="290" stroke="#b3402a" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+      <rect x="932.0" y="232" width="76.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="970" y="241" fill="#b3402a" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">wei (B,T,T)</text>
+      <line x1="360" y1="314" x2="850" y2="314" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="505.0" y="294" width="200.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="605" y="303" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">v (B,T,hs) · "관심 있으면 이걸 줄게"</text>
+      <rect x="40" y="190" width="120" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="40" y="190" width="120" height="48" rx="6" fill="rgba(85,89,95,0.10)" stroke="#7d8188" stroke-width="0.8"/>
+      <text x="100.0" y="212.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">x</text>
+      <text x="100.0" y="226.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">(B,T,C) · 사적 정보</text>
+      <rect x="230" y="90" width="130" height="44" rx="6" fill="#f6f5f2"/>
+      <rect x="230" y="90" width="130" height="44" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="295.0" y="110.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">q = query(x)</text>
+      <text x="295.0" y="124.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">"내가 찾는 것" (B,T,hs)</text>
+      <rect x="230" y="190" width="130" height="44" rx="6" fill="#f6f5f2"/>
+      <rect x="230" y="190" width="130" height="44" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="295.0" y="210.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">k = key(x)</text>
+      <text x="295.0" y="224.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">"내가 가진 것" (B,T,hs)</text>
+      <rect x="230" y="290" width="130" height="44" rx="6" fill="#f6f5f2"/>
+      <rect x="230" y="290" width="130" height="44" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="295.0" y="310.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">v = value(x)</text>
+      <text x="295.0" y="324.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">"줄 것" (B,T,hs)</text>
+      <rect x="430" y="140" width="150" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="430" y="140" width="150" height="48" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="505.0" y="162.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">q @ kᵀ · hs^-0.5</text>
+      <text x="505.0" y="176.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">affinity (B,T,T)</text>
+      <rect x="650" y="140" width="130" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="650" y="140" width="130" height="48" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="715.0" y="162.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">masked_fill</text>
+      <text x="715.0" y="176.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">tril==0 → −inf</text>
+      <rect x="850" y="140" width="130" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="850" y="140" width="130" height="48" rx="6" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/>
+      <text x="915.0" y="162.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">softmax</text>
+      <text x="915.0" y="176.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">행마다 합 1 · 과거 가중치</text>
+      <rect x="850" y="290" width="150" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="850" y="290" width="150" height="48" rx="6" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/>
+      <text x="925.0" y="312.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">out = wei @ v</text>
+      <text x="925.0" y="326.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">(B,T,hs) · 가중 평균</text>
+      <text x="430" y="336" fill="#7d8188" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.14em">WEI · T = 4 · 균등 affinity일 때 (v1–v3의 평균)</text>
+      <rect x="430" y="344" width="20" height="20" fill="rgba(179,64,42,0.40)" stroke="#55595f" stroke-width="0.6"/>
+      <text x="440.0" y="358" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">1</text>
+      <rect x="450" y="344" width="20" height="20" fill="#ffffff" stroke="#55595f" stroke-width="0.6"/>
+      <text x="460.0" y="358" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">0</text>
+      <rect x="470" y="344" width="20" height="20" fill="#ffffff" stroke="#55595f" stroke-width="0.6"/>
+      <text x="480.0" y="358" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">0</text>
+      <rect x="490" y="344" width="20" height="20" fill="#ffffff" stroke="#55595f" stroke-width="0.6"/>
+      <text x="500.0" y="358" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">0</text>
+      <rect x="430" y="364" width="20" height="20" fill="rgba(179,64,42,0.22)" stroke="#55595f" stroke-width="0.6"/>
+      <text x="440.0" y="378" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">.50</text>
+      <rect x="450" y="364" width="20" height="20" fill="rgba(179,64,42,0.22)" stroke="#55595f" stroke-width="0.6"/>
+      <text x="460.0" y="378" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">.50</text>
+      <rect x="470" y="364" width="20" height="20" fill="#ffffff" stroke="#55595f" stroke-width="0.6"/>
+      <text x="480.0" y="378" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">0</text>
+      <rect x="490" y="364" width="20" height="20" fill="#ffffff" stroke="#55595f" stroke-width="0.6"/>
+      <text x="500.0" y="378" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">0</text>
+      <rect x="430" y="384" width="20" height="20" fill="rgba(179,64,42,0.17)" stroke="#55595f" stroke-width="0.6"/>
+      <text x="440.0" y="398" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">.33</text>
+      <rect x="450" y="384" width="20" height="20" fill="rgba(179,64,42,0.17)" stroke="#55595f" stroke-width="0.6"/>
+      <text x="460.0" y="398" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">.33</text>
+      <rect x="470" y="384" width="20" height="20" fill="rgba(179,64,42,0.17)" stroke="#55595f" stroke-width="0.6"/>
+      <text x="480.0" y="398" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">.33</text>
+      <rect x="490" y="384" width="20" height="20" fill="#ffffff" stroke="#55595f" stroke-width="0.6"/>
+      <text x="500.0" y="398" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">0</text>
+      <rect x="430" y="404" width="20" height="20" fill="rgba(179,64,42,0.14)" stroke="#55595f" stroke-width="0.6"/>
+      <text x="440.0" y="418" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">.25</text>
+      <rect x="450" y="404" width="20" height="20" fill="rgba(179,64,42,0.14)" stroke="#55595f" stroke-width="0.6"/>
+      <text x="460.0" y="418" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">.25</text>
+      <rect x="470" y="404" width="20" height="20" fill="rgba(179,64,42,0.14)" stroke="#55595f" stroke-width="0.6"/>
+      <text x="480.0" y="418" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">.25</text>
+      <rect x="490" y="404" width="20" height="20" fill="rgba(179,64,42,0.14)" stroke="#55595f" stroke-width="0.6"/>
+      <text x="500.0" y="418" fill="#1f2023" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle">.25</text>
+      <text x="520" y="358" fill="#7d8188" font-size="8" font-family="'Geist Mono', monospace">행 t = 토큰 t가 과거에서 얼마나</text>
+      <text x="520" y="372" fill="#7d8188" font-size="8" font-family="'Geist Mono', monospace">위 삼각(미래) = 0 · 학습되면</text>
+      <text x="520" y="386" fill="#7d8188" font-size="8" font-family="'Geist Mono', monospace">행마다 값이 달라진다</text>
+      <line x1="40" y1="452" x2="1040" y2="452" stroke="rgba(31,32,35,0.10)" stroke-width="0.8"/>
+      <text x="40" y="468" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+      <rect x="40" y="478" width="14" height="10" rx="2" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/><text x="60" y="486" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">통신이 일어나는 곳 (가중치 계산, 가중 합)</text>
+      <rect x="300" y="478" width="14" height="10" rx="2" fill="#ffffff" stroke="#1f2023" stroke-width="1"/><text x="320" y="486" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">토큰마다 독립인 선형 변환 (bias 없음)</text>
+      <text x="1040" y="486" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif" font-style="italic" text-anchor="end">gpt.py Head.forward · Attention(Q,K,V) = softmax(QKᵀ/√d_k)V (Vaswani et al. 2017, 식 1) + causal mask · hs = head_size</text>
+    </svg></div></body></html>

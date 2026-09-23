@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Let's build GPT · decoder-only Transformer</title><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Serif:ital@0;1&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--color-paper:#f6f5f2;--color-ink:#1f2023;--color-muted:#55595f;--color-accent:#b3402a;--font-sans:'Geist','Noto Sans KR',system-ui,sans-serif;--font-serif:'Instrument Serif','Noto Serif KR',serif;--font-mono:'Geist Mono',ui-monospace,monospace}
+body{font-family:var(--font-sans);background:var(--color-paper);color:var(--color-ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:3rem 2rem}.frame{max-width:1200px;width:100%}.eyebrow{font-family:var(--font-mono);font-size:.66rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--color-muted);margin-bottom:.5rem}h1{font-family:var(--font-serif);font-size:clamp(1.5rem,2.4vw + .75rem,2rem);font-weight:400;letter-spacing:-.02em;line-height:1.15;color:var(--color-ink);margin-bottom:1.5rem}svg{width:100%;min-width:900px;display:block}</style></head>
+<body><div class="frame"><p class="eyebrow">Architecture · Let's build GPT</p><h1>Decoder-only Transformer: 통신과 계산을 번갈아 6번</h1>
+    <svg viewBox="0 0 1080 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="decoder-block-title decoder-block-desc">
+      <title id="decoder-block-title">강의의 GPT 구조</title>
+      <desc id="decoder-block-desc">왼쪽은 토큰 임베딩과 위치 임베딩을 더해 Block 6개, 최종 LayerNorm, lm_head, cross entropy로 가는 전체 흐름. 오른쪽은 Block 하나를 확대한 것으로, residual pathway에서 갈라져 LayerNorm → multi-head attention → 다시 더하고, LayerNorm → feed-forward → 다시 더한다.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#55595f"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#b3402a"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4a5a6e"/></marker>
+      </defs>
+      <rect width="100%" height="100%" fill="#f6f5f2"/>
+      <path d="M 105,114 V 146 Q 105,154 113,154 H 166.0" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 275,114 V 146 Q 275,154 267,154 H 194.0" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <circle cx="180.0" cy="154" r="9" fill="#f6f5f2" stroke="#1f2023" stroke-width="1"/><text x="180.0" y="158" fill="#1f2023" font-size="12" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">+</text>
+      <line x1="180.0" y1="163" x2="180.0" y2="220" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="212.0" y="184" width="60.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="242.0" y="193" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">x (B,T,C)</text>
+      <line x1="180.0" y1="280" x2="180.0" y2="320" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <rect x="220.0" y="292" width="60.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="250.0" y="301" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">× n_layer</text>
+      <line x1="180.0" y1="364" x2="180.0" y2="380" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="180.0" y1="424" x2="180.0" y2="440" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 300,250 H 352 Q 360,250 360,242 V 78 Q 360,70 368,70 H 400" fill="none" stroke="#55595f" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+      <rect x="294.0" y="152" width="56.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="322" y="161" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">Block 하나</text>
+      <rect x="400" y="50" width="640" height="420" rx="8" fill="rgba(31,32,35,0.02)" stroke="rgba(31,32,35,0.10)" stroke-width="0.8"/>
+      <rect x="414" y="54" width="330" height="12" rx="2" fill="#f6f5f2"/><text x="422" y="63" fill="rgba(31,32,35,0.45)" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.14em">BLOCK · 통신(attention) 뒤 계산(feed-forward) · pre-norm</text>
+      <line x1="480" y1="90" x2="480" y2="440" stroke="#b3402a" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+      <rect x="497.0" y="94" width="110.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="552" y="103" fill="#b3402a" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">residual pathway  x</text>
+      <line x1="480" y1="120" x2="600" y2="120" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="665" y1="140" x2="665" y2="160" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 665,208 V 232 Q 665,240 657,240 H 494" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <circle cx="480" cy="240" r="9" fill="#f6f5f2" stroke="#b3402a" stroke-width="1.2"/><text x="480" y="244" fill="#b3402a" font-size="12" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">+</text>
+      <line x1="480" y1="290" x2="600" y2="290" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <line x1="665" y1="310" x2="665" y2="330" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <path d="M 665,378 V 402 Q 665,410 657,410 H 494" fill="none" stroke="#55595f" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <circle cx="480" cy="410" r="9" fill="#f6f5f2" stroke="#b3402a" stroke-width="1.2"/><text x="480" y="414" fill="#b3402a" font-size="12" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">+</text>
+      <rect x="675.0" y="216" width="90.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="720" y="225" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">proj → dropout</text>
+      <rect x="692.0" y="386" width="56.0" height="12" rx="2" fill="#f6f5f2"/>
+      <text x="720" y="395" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">dropout</text>
+      <rect x="30" y="70" width="150" height="44" rx="6" fill="#f6f5f2"/>
+      <rect x="30" y="70" width="150" height="44" rx="6" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/>
+      <text x="105.0" y="90.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">token emb</text>
+      <text x="105.0" y="104.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">idx → (B,T,C) · 65×384</text>
+      <text x="105.0" y="64" fill="#7d8188" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">INPUT · 앞 글자 T개 (≤ 256)</text>
+      <rect x="200" y="70" width="150" height="44" rx="6" fill="#f6f5f2"/>
+      <rect x="200" y="70" width="150" height="44" rx="6" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/>
+      <text x="275.0" y="90.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">position emb</text>
+      <text x="275.0" y="104.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">(T,C) · 256×384</text>
+      <text x="275.0" y="64" fill="#7d8188" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">POSITION</text>
+      <rect x="60" y="220" width="240" height="60" rx="6" fill="#f6f5f2"/>
+      <rect x="60" y="220" width="240" height="60" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="180.0" y="248.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">Block × 6</text>
+      <text x="180.0" y="262.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">통신 + 계산 · 384-dim · 6 heads</text>
+      <rect x="60" y="320" width="240" height="44" rx="6" fill="#f6f5f2"/>
+      <rect x="60" y="320" width="240" height="44" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="180.0" y="346.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">LayerNorm (ln_f)</text>
+      <rect x="60" y="380" width="240" height="44" rx="6" fill="#f6f5f2"/>
+      <rect x="60" y="380" width="240" height="44" rx="6" fill="rgba(31,32,35,0.05)" stroke="#55595f" stroke-width="0.8"/>
+      <text x="180.0" y="400.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">lm_head</text>
+      <text x="180.0" y="414.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Linear 384 → 65 logits</text>
+      <rect x="60" y="440" width="240" height="44" rx="6" fill="#f6f5f2"/>
+      <rect x="60" y="440" width="240" height="44" rx="6" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/>
+      <text x="180.0" y="460.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">cross_entropy</text>
+      <text x="180.0" y="474.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">(B·T, 65) vs targets</text>
+      <rect x="600" y="100" width="130" height="40" rx="6" fill="#f6f5f2"/>
+      <rect x="600" y="100" width="130" height="40" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="665.0" y="124.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">LayerNorm ln1</text>
+      <rect x="600" y="160" width="200" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="600" y="160" width="200" height="48" rx="6" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/>
+      <text x="700.0" y="182.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">MultiHeadAttention</text>
+      <text x="700.0" y="196.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">6 heads × head_size 64 · causal</text>
+      <rect x="600" y="270" width="130" height="40" rx="6" fill="#f6f5f2"/>
+      <rect x="600" y="270" width="130" height="40" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="665.0" y="294.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">LayerNorm ln2</text>
+      <rect x="600" y="330" width="200" height="48" rx="6" fill="#f6f5f2"/>
+      <rect x="600" y="330" width="200" height="48" rx="6" fill="#ffffff" stroke="#1f2023" stroke-width="1"/>
+      <text x="700.0" y="352.0" fill="#1f2023" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans KR', sans-serif" text-anchor="middle">FeedForward</text>
+      <text x="700.0" y="366.0" fill="#55595f" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">Linear 384→1536 · ReLU · →384</text>
+      <text x="840" y="110" fill="#7d8188" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">토큰끼리 정보를 주고받는 유일한 곳.</text>
+      <text x="840" y="124" fill="#7d8188" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">과거만 본다(tril mask).</text>
+      <text x="840" y="340" fill="#7d8188" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">토큰마다 독립 계산.</text>
+      <text x="840" y="354" fill="#7d8188" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">안쪽 폭 4× (논문 512→2048).</text>
+      <text x="1026" y="458" fill="#7d8188" font-size="8" font-family="'Geist Mono', monospace" text-anchor="end">x = x + sa(ln1(x)); x = x + ffwd(ln2(x))</text>
+      <line x1="40" y1="502" x2="1040" y2="502" stroke="rgba(31,32,35,0.10)" stroke-width="0.8"/>
+      <text x="40" y="518" fill="#55595f" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+      <rect x="40" y="528" width="14" height="10" rx="2" fill="rgba(179,64,42,0.08)" stroke="#b3402a" stroke-width="1"/><text x="60" y="536" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">이 강의의 핵심 (attention, loss)</text>
+      <line x1="260" y1="533" x2="280" y2="533" stroke="#b3402a" stroke-width="1.6"/><text x="286" y="536" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif">residual pathway · 기울기 고속도로</text>
+      <text x="1040" y="536" fill="#55595f" font-size="8.5" font-family="'Geist', 'Noto Sans KR', sans-serif" font-style="italic" text-anchor="end">Adapted from Vaswani et al. 2017, Figure 1 (decoder 쪽만, cross-attention 없음, pre-norm). 크기는 gpt.py 최종값.</text>
+    </svg></div></body></html>

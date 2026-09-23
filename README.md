@@ -30,7 +30,7 @@
 - [ ] micrograd — 역전파 (2h25) — [정리 노트](lectures/02-karpathy-micrograd/notes.md)
 - [ ] makemore 1 — bigram, 언어 모델링 프레임 (1h57) — [정리 노트](lectures/03-karpathy-makemore-1/notes.md)
 - [ ] makemore 2 — MLP, 임베딩, 학습 루프 (1h15) — [정리 노트](lectures/04-karpathy-makemore-2/notes.md)
-- [ ] Let's build GPT (1h56)
+- [ ] Let's build GPT (1h56) — [정리 노트](lectures/05-karpathy-build-gpt/notes.md)
 - [ ] Let's build the GPT Tokenizer (2h13)
 
 보강 (minimind 실습 뒤에)
