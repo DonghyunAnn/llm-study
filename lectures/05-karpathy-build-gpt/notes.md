@@ -11,12 +11,12 @@
 - [Colab 노트북](https://colab.research.google.com/drive/1JMLa53HDuA-i7ZBmqV7ZnA3c_fvtXnx-?usp=sharing) · [ng-video-lecture 저장소](https://github.com/karpathy/ng-video-lecture) · [nanoGPT](https://github.com/karpathy/nanoGPT)
 - 논문: [Attention Is All You Need](https://arxiv.org/abs/1706.03762) (Vaswani et al. 2017) · [GPT-3](https://arxiv.org/abs/2005.14165) (Brown et al. 2020) · [ChatGPT 블로그](https://openai.com/blog/chatgpt/)
 - 연습문제 EX1–EX4가 설명란에 있다([@sec-exercises]).
-- 설명란의 정정 두 개: 0:57:00 "tokens from the past cannot communicate"는 "future"의 말실수. 1:20:05 정규화는 C가 아니라 head_size로 나눠야 한다(저장소 코드는 이미 `k.shape[-1]**-0.5`로 맞다).
+- 설명란의 정정 두 개: 0:57:00 "tokens from the past cannot communicate"는 "future"의 말실수. 1:20:05 스케일링은 `C**-0.5`가 아니라 `head_size**-0.5`를 곱해야 한다(저장소 코드는 이미 `k.shape[-1]**-0.5`로 맞다).
 - 공식 챕터 30개(그룹 제목 4개 별도)가 설명란에 있다. 아래 절의 시간은 그 챕터를 따른다.
 
 ## 한 줄 요약
 
-GPT는 "앞 토큰들이 주어졌을 때 다음 토큰"을 예측하는 decoder-only Transformer이고, Transformer의 새로운 부분은 딱 하나, **self-attention**이다. 토큰마다 query("내가 찾는 것"), key("내가 가진 것"), value("줄 것")를 만들고, query와 key의 내적으로 과거 토큰에 대한 관심도(affinity)를 데이터에 따라 정한 뒤, softmax로 정규화해 value를 가중 평균한다. 미래는 하삼각 mask로 가린다. 그 위에 토큰별 MLP(feed-forward)를 얹고, 둘을 residual pathway 옆에 pre-norm으로 붙인 block을 6번 쌓으면 tiny shakespeare에서 val loss가 bigram의 2.5에서 **1.48**로 내려간다. 나머지 요소(위치 임베딩, multi-head, 4×MLP, residual, LayerNorm, dropout, 1/√d 스케일)는 각각 한 가지 문제를 푸는 장치이고, 이 강의는 그것을 하나씩 추가하며 val loss가 얼마나 내려가는지 보여 준다.
+GPT는 "앞 토큰들이 주어졌을 때 다음 토큰"을 예측하는 decoder-only Transformer이고, 이 강의에서 새로 배우는 핵심 메커니즘은 **self-attention**이다. 토큰마다 query("내가 찾는 것"), key("내가 가진 것"), value("줄 것")를 만들고, query와 key의 내적으로 과거 토큰에 대한 관심도(affinity)를 데이터에 따라 정한 뒤, softmax로 정규화해 value를 가중 평균한다. 미래는 하삼각 mask로 가린다. 그 위에 토큰별 MLP(feed-forward)를 얹고, 둘을 residual pathway 옆에 pre-norm으로 붙인 block을 6번 쌓으면 tiny shakespeare에서 val loss가 bigram의 2.5에서 **1.48**로 내려간다. 나머지 요소(위치 임베딩, multi-head, 4×MLP, residual, LayerNorm, dropout, 1/√d 스케일)는 각각 한 가지 문제를 푸는 장치이고, 이 강의는 그것을 단계적으로 도입하며 val loss 변화를 관찰한다(residual 단계처럼 여러 변경을 한 번에 넣는 곳도 있어 요소별 효과를 분리한 실험은 아니다).
 
 ## 강의 구조와 코드 대응
 
@@ -39,7 +39,7 @@ GPT는 "앞 토큰들이 주어졌을 때 다음 토큰"을 예측하는 decoder
 
 ## 무엇을 만드나 (0:00–0:08) {#sec-intro}
 
-ChatGPT는 프롬프트를 주면 왼쪽에서 오른쪽으로 토큰을 하나씩 만들어 "시퀀스를 완성"하는 언어 모델이고, 확률적이라 같은 프롬프트에 다른 답을 낸다. 그 안의 신경망이 2017년 논문 "Attention Is All You Need"의 **Transformer**다. GPT는 Generatively Pretrained Transformer의 약자. 논문은 기계 번역 논문처럼 읽히는데, 저자들도 이 구조가 이후 5년간 AI 전체를 차지할 줄은 몰랐을 것이라고 카파시는 말한다. ChatGPT 자체(인터넷 대부분으로 사전학습하고 여러 단계로 미세조정한 상용 시스템)를 재현할 수는 없으니, 이 강의는 **문자 단위 Transformer 언어 모델**을 tiny shakespeare(셰익스피어 작품 전체를 이어 붙인 1MB 파일)로 학습해 "무한 셰익스피어"를 만든다.
+ChatGPT는 프롬프트를 주면 왼쪽에서 오른쪽으로 토큰을 하나씩 만들어 "시퀀스를 완성"하는 언어 모델이고, 확률적이라 같은 프롬프트에 다른 답을 낸다. 그 안의 신경망이 2017년 논문 "Attention Is All You Need"의 **Transformer**다. GPT는 Generatively Pretrained Transformer의 약자. 논문은 기계 번역 논문처럼 읽히는데, 저자들도 이 구조가 이후 5년간 AI 전체를 차지할 줄은 몰랐을 것이라고 카파시는 말한다. ChatGPT 자체(인터넷의 큰 덩어리로 사전학습하고 여러 단계로 미세조정한 상용 시스템)를 재현할 수는 없으니, 이 강의는 **문자 단위 Transformer 언어 모델**을 tiny shakespeare(약 1MB의 셰익스피어 텍스트. 카파시는 "내가 알기로 전집"이라고 하지만 원 데이터의 char-rnn README는 "작품의 일부"라고 적고 있다)로 학습해 "무한 셰익스피어"를 만든다.
 
 카파시는 이미 완성된 코드 [nanoGPT](https://github.com/karpathy/nanoGPT)를 갖고 있다. 모델 정의와 학습 스크립트 각각 300줄이고, OpenWebText로 학습하면 GPT-2(124M)를 재현한다. 이 강의는 그 저장소를 빈 파일에서 다시 쓴다. 필요한 배경은 Python, 미적분과 통계의 기초, 그리고 makemore 시리즈(언어 모델링 틀, 텐서, `nn`)다.
 
@@ -76,8 +76,8 @@ for t in range(block_size):
     context = x[:t+1]
     target = y[t]
     print(f"when input is {context} the target: {target}")
-# when input is [18] the target: 47      각주: 9글자 조각에 예제 8개가 들어 있다. 문맥 1개 → 8개까지 전부
-# when input is [18, 47] the target: 56
+# when input is tensor([18]) the target: 47      각주: 9글자 조각에 예제 8개가 들어 있다. 문맥 1개 → 8개까지 전부
+# when input is tensor([18, 47]) the target: 56
 # ...
 ```
 
@@ -101,7 +101,7 @@ xb, yb = get_batch('train')     # 각주: xb[0] = [24, 43, 58, 5, 57, 1, 46, 43]
 배치 차원은 GPU를 바쁘게 하려는 것이고 배치 안의 조각들은 서로 완전히 독립이다. (4, 8) 텐서 하나에 예제 32개가 들어 있다.
 
 ::: {.callout-note title="minimind 대응"}
-minimind의 `PretrainDataset`(`dataset/lm_dataset.py:50–58`)은 조각을 무작위로 뽑지 않고 문서 하나를 BOS + 토큰 + EOS로 `max_length`(기본 512)까지 pad한 뒤 `labels = input_ids`의 복사본으로 두되 pad 자리는 −100으로 바꿔 loss에서 제외하고(`:56–57`, forward의 `ignore_index=-100`과 짝), 한 칸 밀기는 모델 forward(`model_minimind.py:256`)에서 한다. 이 강의의 `y = data[i+1:...]`가 그 밀기다. 위치 표는 `max_position_embeddings` 32768까지 있지만 사전학습 스크립트의 기본 `--max_seq_len`은 340이다(`train_pretrain.py:90`, README는 768 권장).
+minimind의 `PretrainDataset`(`dataset/lm_dataset.py:50–58`)은 조각을 무작위로 뽑지 않고 문서 하나를 `max_length − 2` 토큰에서 잘라 BOS + 토큰 + EOS로 만들고 `max_length`(클래스 기본값 512)까지 pad한 뒤 `labels = input_ids`의 복사본으로 두되 pad 자리는 −100으로 바꿔 loss에서 제외하고(`:56–57`, forward의 `ignore_index=-100`과 짝), 한 칸 밀기는 모델 forward(`model_minimind.py:256`)에서 한다. 이 강의의 `y = data[i+1:...]`가 그 밀기다. 위치 표는 `max_position_embeddings` 32768까지 있지만 사전학습 스크립트의 기본 `--max_seq_len`은 340이다(`train_pretrain.py:90`, README는 768 권장).
 :::
 
 ## Bigram 기준선 (0:22–0:42) {#sec-bigram}
@@ -203,7 +203,7 @@ self-attention의 효율적 구현 한가운데에 있는 트릭이다. (B, T, C
 xbow = torch.zeros((B,T,C))          # 각주: bow = bag of words. 평균 내는 것을 그렇게 부른다
 for b in range(B):
     for t in range(T):
-        xprev = x[b,:t+1] # (t,C)    # 각주: 자기 자신까지 포함한 과거
+        xprev = x[b,:t+1] # (t,C)    # 각주: 자기 자신까지 포함한 과거. 정확한 shape은 (t+1, C)
         xbow[b,t] = torch.mean(xprev, 0)
 ```
 
@@ -270,7 +270,7 @@ wei =  q @ k.transpose(-2, -1) # (B, T, 16) @ (B, 16, T) ---> (B, T, T)   각주
 tril = torch.tril(torch.ones(T, T))
 #wei = torch.zeros((T,T))                           # 각주: v3의 0 대신 위의 내적이 affinity
 wei = wei.masked_fill(tril == 0, float('-inf'))     # 각주: 미래 차단. 이 줄을 지우면 encoder block
-wei = F.softmax(wei, dim=-1)                        # 각주: −0.11 같은 음수 가중치를 쓸 수는 없으니 exp 후 정규화
+wei = F.softmax(wei, dim=-1)                        # 각주: −0.11 같은 값을 그대로 쓰지 않고, 비음수·합 1인 분포로 만들려고 exp 후 정규화
 
 v = value(x)                                        # 각주: 집계하는 것은 x가 아니라 v. "관심 있으면 이걸 줄게"
 out = wei @ v                                       # (B, T, T) @ (B, T, 16) → (B, T, 16)
@@ -289,10 +289,10 @@ out = wei @ v                                       # (B, T, T) @ (B, T, 16) →
 3. **배치 차원끼리는 통신하지 않는다.** 배치 행렬 곱이 병렬로 따로 돈다. 노드 8개짜리 풀 4개, 총 32개 노드가 따로 대화하는 셈이다.
 4. **encoder block vs decoder block.** 언어 모델링은 미래가 과거에게 말하면 안 되지만, 감정 분류처럼 토큰 전부가 서로 봐도 되는 경우는 `masked_fill` 줄을 지우면 된다. 그것이 encoder block이고, 삼각 mask가 있는 것이 decoder block이다. attention은 임의의 연결을 지원한다.
 5. **self-attention vs cross-attention.** 지금은 q, k, v가 모두 같은 x에서 나오니 self다. encoder-decoder Transformer에서는 query는 x에서, key와 value는 외부(encoder가 인코딩한 조건 문맥)에서 온다. 그것이 cross-attention이다.
-6. **"scaled" attention: 왜 1/√head_size로 나누나.** 논문의 식은 `softmax(QKᵀ/√d_k)V`다. q와 k가 단위 분산이면 `q @ kᵀ`의 분산은 head_size 크기(이 서버: 17.5)가 되고, √head_size로 나누면 1로 돌아온다(이 서버: 1.09). `wei`는 softmax로 들어가는데, softmax는 입력이 극단적이면 one-hot으로 수렴한다. 예를 들어(정리자 예. 강의 화면의 수치는 자막에 없다) `[0.1, -0.2, 0.3, -0.2, 0.5]`의 softmax는 `[.19, .14, .24, .14, .29]`로 퍼져 있지만 8배 하면 `[.03, .00, .16, .00, .80]`으로 최댓값에 몰린다. 초기화 때 wei가 너무 뾰족하면 모든 노드가 한 노드에서만 정보를 받게 되므로, 스케일링은 **초기화 때 분산을 통제**하는 장치다.
+6. **"scaled" attention: 왜 √head_size로 나누나(= `head_size**-0.5`를 곱하나).** 논문의 식은 `softmax(QKᵀ/√d_k)V`다. q와 k의 성분이 서로 독립이고 평균 0, 분산 1이면 `q @ kᵀ`의 분산은 head_size 크기(이 서버, 독립 난수로: 17.5)가 되고, √head_size로 나누면 1로 돌아온다(이 서버: 1.09). `wei`는 softmax로 들어가는데, softmax는 입력이 극단적이면 one-hot으로 수렴한다. 예를 들어(정리자 예. 강의 화면의 수치는 자막에 없다) `[0.1, -0.2, 0.3, -0.2, 0.5]`의 softmax는 `[.19, .14, .24, .14, .29]`로 퍼져 있지만 8배 하면 `[.03, .00, .16, .00, .80]`으로 최댓값에 몰린다. 초기화 때 wei가 너무 뾰족하면 모든 노드가 한 노드에서만 정보를 받게 되므로, 스케일링은 **초기화 때 분산을 통제**하는 장치다.
 
 ::: {.callout-note title="minimind 대응"}
-`Attention.forward`(`model_minimind.py:111–134`)가 이 head를 통째로 담고 있다. `q_proj`, `k_proj`, `v_proj`, `o_proj` 모두 `bias=False`(`:100–103`, 강의의 관례 그대로). flash attention이 가능하고 KV cache와 padding mask가 없을 때는(`:125`) `F.scaled_dot_product_attention(..., is_causal=True)`(`:126`) 한 줄이 "내적 → 1/√d → 삼각 mask → softmax → @v"를 다 하고, 아니면 강의와 같은 수동 경로(`:128–131`)를 탄다. `scores / math.sqrt(self.head_dim)`이 6번 메모의 스케일링, `triu(1)`에 −inf를 더하는 것이 `masked_fill`이다. 차이는 (1) 위치를 임베딩 덧셈이 아니라 q, k에 회전을 거는 RoPE(`apply_rotary_pos_emb`, `:80`)로 넣고, (2) key/value head를 query head보다 적게 두는 GQA(`num_key_value_heads` 4 vs `num_attention_heads` 8, `repeat_kv`), (3) q, k에 RMSNorm(QK-norm)을 건다는 것이다.
+`Attention.forward`(`model_minimind.py:111–134`)가 이 head를 통째로 담고 있다. `q_proj`, `k_proj`, `v_proj`, `o_proj` 모두 `bias=False`(`:100–103`. 강의도 Q/K/V는 bias가 없지만 출력 `proj`에는 bias가 있다). SDPA를 쓸 수 있고 `seq_len > 1`, KV cache 없음, padding mask 없음(또는 전부 1)일 때는(`:125`) `F.scaled_dot_product_attention(..., is_causal=True)`(`:126`) 한 줄이 "내적 → 1/√d → 삼각 mask → softmax → @v"를 다 하고, 아니면 강의와 같은 수동 경로(`:128–131`)를 탄다. `scores / math.sqrt(self.head_dim)`이 6번 메모의 스케일링, `triu(1)`에 −inf를 더하는 것이 `masked_fill`이다. 차이는 (1) 위치를 임베딩 덧셈이 아니라 q, k에 회전을 거는 RoPE(`apply_rotary_pos_emb`, `:80`)로 넣고, (2) key/value head를 query head보다 적게 두는 GQA(`num_key_value_heads` 4 vs `num_attention_heads` 8, `repeat_kv`), (3) q, k에 RMSNorm(QK-norm)을 건다는 것이다.
 :::
 
 ## Transformer 조립 (1:19–1:38) {#sec-block}
@@ -380,7 +380,7 @@ class FeedFoward(nn.Module):                      # 각주: 저장소 오타 그
 
 Transformer는 통신과 계산을 **번갈아** 하고, 그 쌍을 block으로 묶어 반복한다. head 수는 group convolution의 group 수 같은 것이고, n_embd 32에 head 4개면 head_size는 8이다. block 3개를 `nn.Sequential`로 쌓아 돌리면... 결과가 좋지 않다. 꽤 깊은 신경망이 되어 최적화 문제가 생기기 시작했다. 이 서버 재현: block 3개를 residual 없이 쌓으면 5,000스텝 뒤 val **2.32**로, block 하나(2.24)보다 나쁘다. 논문에서 깊은 망을 최적화 가능하게 하는 장치 둘을 빌린다.
 
-**첫째, residual(skip) connection**(He et al. 2015, ResNet). 데이터를 변환한 뒤 원래 입력을 **더한다**. 카파시가 좋아하는 그림은 위에서 아래로 흐르는 **residual pathway**가 있고, 거기서 갈라져 나가 계산을 하고 덧셈으로 돌아오는 모양이다. 입력에서 출력까지 덧셈만으로 이어진 길이 생긴다. micrograd에서 봤듯 덧셈은 기울기를 양쪽 가지에 그대로 나눠 주므로, loss의 기울기가 모든 덧셈 노드를 타고 입력까지 **막힘없이 흐르는 고속도로**가 생긴다. residual block들은 초기에 거의 기여하지 않게 초기화되어 처음에는 없는 것과 같다가 최적화 중에 "온라인"이 된다.
+**첫째, residual(skip) connection**(He et al. 2015, ResNet). 데이터를 변환한 뒤 원래 입력을 **더한다**. 카파시가 좋아하는 그림은 위에서 아래로 흐르는 **residual pathway**가 있고, 거기서 갈라져 나가 계산을 하고 덧셈으로 돌아오는 모양이다. 입력에서 출력까지 덧셈만으로 이어진 길이 생긴다. micrograd에서 봤듯 덧셈은 기울기를 양쪽 가지에 그대로 나눠 주므로, loss의 기울기가 모든 덧셈 노드를 타고 입력까지 **막힘없이 흐르는 고속도로**가 생긴다. residual block들은 "보통" 초기에 거의 기여하지 않게 초기화되어 처음에는 없는 것과 같다가 최적화 중에 "온라인"이 된다(일반론이다. 이 강의 코드는 그런 특별 초기화를 하지 않는다).
 
 ```python
 class Block(nn.Module):
@@ -403,7 +403,7 @@ class Block(nn.Module):
 
 residual을 넣으면서 두 가지가 같이 들어온다. multi-head 출력을 이어 붙인 뒤 residual pathway로 돌려보내는 **projection**(`proj`), 그리고 feed-forward의 안쪽 폭을 **4배**로 키우는 것(논문의 512 → 2048). 계산을 residual pathway 옆의 block 안에서 늘리는 것이다. **val → 2.08**. 이 서버(block 3, residual + proj + 4×): **2.07**. 이때부터 train loss가 val보다 앞서기 시작한다. 망이 커져 살짝 과적합이 보인다. 생성문에 영어 비슷한 것이 나오기 시작한다.
 
-**둘째, LayerNorm**(1:32–1:37). makemore 3편의 BatchNorm은 배치 차원에 걸쳐 각 뉴런(열)을 평균 0, 표준편차 1로 만들었다. LayerNorm은 정규화 축을 0에서 1로 바꿔 **열이 아니라 행**, 즉 예제 하나의 벡터 안에서 정규화한다("매우 복잡하다"고 카파시는 농담한다). 이 서버 확인: BatchNorm 뒤 0번 열은 평균 0.00, 표준편차 1.00이고 0번 행은 0.04, 1.04. LayerNorm 뒤 0번 행이 0.00, 1.00이다. 예제끼리 계산이 얽히지 않으므로 running mean/std buffer도, 학습·추론 구분도 필요 없고 gamma, beta만 남는다. 논문(2017)은 변환 **뒤**에 Add & Norm을 뒀지만 지금은 변환 **앞**에 두는 **pre-norm**이 더 흔하고, 강의도 그렇게 한다. 5년간 Transformer가 거의 안 바뀌었다는 말의 "거의"가 이것이다. `ln1`, `ln2`의 크기는 n_embd 32이고 batch와 time이 모두 배치 차원 노릇을 하므로 토큰별 정규화다. 초기화 때는 단위 가우시안이지만 gamma, beta가 학습되므로 나중에는 아닐 수 있고, 그것은 최적화가 정한다. 더 크고 깊은 망에서는 LayerNorm이 더 도움될 것이라고 한다. **val 2.08 → 2.06**. 그런 다음 깜빡했다며 마지막 block 뒤, lm_head 앞에도 `ln_f`를 하나 더 둔다(2.06은 그 전에 잰 값). 이 서버(`ln_f` 포함): **2.06**(train 1.98).
+**둘째, LayerNorm**(1:32–1:37). makemore 3편의 BatchNorm은 배치 차원에 걸쳐 각 뉴런(열)을 평균 0, 표준편차 1로 만들었다. LayerNorm은 정규화 축을 0에서 1로 바꿔 **열이 아니라 행**, 즉 예제 하나의 벡터 안에서 정규화한다("매우 복잡하다"고 카파시는 농담한다). 이 서버 확인: BatchNorm 뒤 0번 열은 평균 0.00, 표준편차 1.00이고 0번 행은 0.04, 1.04. LayerNorm 뒤 0번 행이 0.00, 1.00이다. 예제끼리 계산이 얽히지 않으므로 running mean/std buffer도, 학습·추론 구분도 필요 없고 gamma, beta만 남는다. 논문(2017)은 변환 **뒤**에 Add & Norm을 뒀지만 지금은 변환 **앞**에 두는 **pre-norm**이 더 흔하고, 강의도 그렇게 한다. 5년간 Transformer가 거의 안 바뀌었다는 말의 "거의"가 이것이다. `ln1`, `ln2`의 크기는 n_embd 32이고 batch와 time이 모두 배치 차원 노릇을 하므로 토큰별 정규화다. 카파시는 "초기화 때는 unit Gaussian"이라고 말하는데, 정확히는 gamma 1, beta 0인 초기에 토큰별 평균 0, 분산 1이 된다는 뜻이고 분포 모양이 가우시안이 되는 것은 아니다(정리자 정정). gamma, beta가 학습되므로 나중에는 그마저 아닐 수 있고, 그것은 최적화가 정한다. 더 크고 깊은 망에서는 LayerNorm이 더 도움될 것이라고 한다. **val 2.08 → 2.06**. 그런 다음 깜빡했다며 마지막 block 뒤, lm_head 앞에도 `ln_f`를 하나 더 둔다(2.06은 그 전에 잰 값). 이 서버(`ln_f` 포함): **2.06**(train 1.98).
 
 ::: {.callout-note title="minimind 대응"}
 `MiniMindBlock.forward`(`model_minimind.py:191–199`)가 이 `Block.forward`와 같은 pre-norm residual 구조다. `residual = hidden_states; hidden_states = self_attn(input_layernorm(hidden_states)); hidden_states += residual; hidden_states = hidden_states + mlp(post_attention_layernorm(hidden_states))`. 다른 점은 LayerNorm 대신 평균을 빼지 않고 RMS로만 나누는 `RMSNorm`(`:50–60`), ReLU MLP 대신 `down_proj(silu(gate_proj(x)) * up_proj(x))`의 SwiGLU(`FeedForward`, `:136–146`, 안쪽 폭은 `intermediate_size`), 그리고 block 8개(`num_hidden_layers`)라는 것이다. 마지막 `self.norm`(`:235`)이 강의의 `ln_f`다.
@@ -413,7 +413,7 @@ residual을 넣으면서 두 가지가 같이 들어온다. multi-head 출력을
 
 ### 스케일 업과 dropout (1:37–1:42)
 
-`n_layer`(block 수)와 `n_head`를 변수로 뽑아내고 `blocks = nn.Sequential(*[Block(n_embd, n_head=n_head) for _ in range(n_layer)])`로 정리한 뒤 **dropout**(Srivastava et al. 2014)을 넣는다. residual pathway로 돌아가기 직전(attention의 proj 뒤, feed-forward 끝)과 softmax 뒤의 affinity에 건다. 매 forward/backward마다 뉴런 일부를 무작위로 0으로 꺼서 학습하고, 추론 때는 전부 켜므로 부분망들의 앙상블을 학습하는 셈이다. 정규화(regularization) 기법이고, 모델을 크게 키울 참이라 과적합이 걱정되어 넣었다.
+`n_layer`(block 수)와 `n_head`를 변수로 뽑아내고 `blocks = nn.Sequential(*[Block(n_embd, n_head=n_head) for _ in range(n_layer)])`로 정리한 뒤 **dropout**(Srivastava et al. 2014)을 넣는다. residual pathway로 돌아가기 직전(attention의 proj 뒤, feed-forward 끝)과 softmax 뒤의 affinity에 건다. 매 forward/backward마다 뉴런 일부를 무작위로 0으로 꺼서 학습하고, 추론 때는 전부 켜므로 부분망들의 앙상블을 학습하는 셈이다. (구현 주의: dropout은 `model.eval()`에서 꺼지는데, `gpt.py`는 `estimate_loss` 끝에 `model.train()`으로 돌아온 뒤 `eval()` 없이 `generate`를 부르므로 저장소의 생성문과 아래 이 서버 생성문은 dropout이 켜진 채 만든 것이다. 정리자 관찰.) 정규화(regularization) 기법이고, 모델을 크게 키울 참이라 과적합이 걱정되어 넣었다.
 
 ```python
 # hyperparameters
@@ -430,10 +430,12 @@ n_layer = 6
 dropout = 0.2                           # 각주: 매 pass마다 중간값의 20%를 끈다
 ```
 
-이 설정으로 파라미터는 약 10.8M(이 서버 계산 10,788,929개, 강의 "약 10 million")이고, 카파시의 A100으로 15분 학습해 **val loss 1.48**(카파시 말로 "2.07에서". 직전 값은 2.06). CPU나 MacBook으로는 돌리지 말고 층과 임베딩을 줄이라고 한다. 이 서버는 128-dim, 4 heads, 4 layers, block 64, batch 32, dropout 0.2로 3,000스텝 돌렸다(파라미터 816,705개, CPU 6분). train 1.71 / val **1.86**이고 생성문은 `Devest KING HARWICH:\nAnd have bard wea' welly yrelk as the surper,` 같은 것으로, 화자 이름과 대사 형식은 잡았지만 단어는 아직 엉터리다. 생성문 10,000자를 `more.txt`에 썼는데, 입력 파일처럼 "누군가 말하는" 형식을 띠지만 읽어 보면 뜻은 없다. 셰익스피어 100만 자로 학습한 문자 단위 Transformer로는 이 정도가 가능하다는 시연이다.
+이 설정으로 파라미터는 약 10.8M(이 서버 계산 10,788,929개, 강의 "약 10 million")이고, 카파시의 A100으로 15분 학습해 **val loss 1.48**(카파시 말로 "2.07에서". 직전 값은 2.06). CPU나 MacBook으로는 돌리지 말고 층과 임베딩을 줄이라고 한다. 이 서버는 128-dim, 4 heads, 4 layers, block 64, batch 32, dropout 0.2로 3,000스텝 돌렸다(파라미터 816,705개, CPU 6분). train 1.71 / val **1.86**이고 생성문은 `Devest KING HARWICH:\nAnd have bard wea' welly yrelk as the surper,` 같은 것으로, 화자 이름과 대사 형식은 잡았지만 단어는 아직 엉터리다.
+
+카파시는 최종 모델의 생성문 10,000자를 파일로 썼고 그것이 저장소의 `more.txt`(시작 개행 포함 10,001자)다. 입력 파일처럼 "누군가 말하는" 형식을 띠지만 읽어 보면 뜻은 없다. 셰익스피어 100만 자로 학습한 문자 단위 Transformer로는 이 정도가 가능하다는 시연이다.
 
 ::: {.callout-note title="minimind 대응"}
-`MiniMindConfig`(`model_minimind.py:10–30`)의 기본값은 `hidden_size` 768(이 강의 384), `num_hidden_layers` 8(6), `num_attention_heads` 8(6), `dropout` 0.0(0.2), 문맥 512로 학습(256). 현재 기본 모델 minimind-3(hidden 768, 8층)은 약 64M, 이전 버전 minimind2-small(hidden 512, 8층)은 약 26M 파라미터로(README) 이 강의의 10.8M과 같은 자릿수다. dropout이 0인 것은 사전학습 데이터가 충분해 과적합 걱정이 적기 때문이다(정리자 해석).
+`MiniMindConfig`(`model_minimind.py:10–30`)의 기본값은 `hidden_size` 768(이 강의 384), `num_hidden_layers` 8(6), `num_attention_heads` 8(6), `dropout` 0.0(0.2). 사전학습 문맥 길이는 스크립트 기본 340(이 강의 256, README는 데이터에 따라 약 380 또는 768 권장). 현재 기본 모델 minimind-3(hidden 768, 8층)은 약 64M, 이전 버전 minimind2-small(hidden 512, 8층)은 약 26M 파라미터로(README) 이 강의의 10.8M과 같은 자릿수다. dropout이 0인 것은 사전학습 데이터가 충분해 과적합 걱정이 적기 때문이다(정리자 해석).
 :::
 
 ## Transformer에 대한 메모 (1:42–1:49) {#sec-notes}
@@ -461,14 +463,14 @@ ChatGPT를 학습하려면 대략 두 단계다. **사전학습(pretraining)**�
 이 데이터 대부분은 OpenAI 내부에 있어 재현이 훨씬 어렵고, nanoGPT는 사전학습에 집중한다.
 
 ::: {.callout-note title="minimind 대응"}
-minimind는 이 두 단계를 전부 코드로 갖고 있어서 이 강의의 다음 편이 되는 셈이다. `trainer/train_pretrain.py`(사전학습) → `train_full_sft.py`(1단계 SFT) → `train_dpo.py`(사람 선호를 reward model 없이 직접 최적화하는 DPO) 또는 `train_ppo.py`/`train_grpo.py`(2–3단계에 해당하는 RL). 이 학습 저장소의 로드맵 3부와 4부(InstructGPT, DPO, GRPO 논문)가 그것이다.
+minimind는 이 두 단계를 전부 코드로 갖고 있어서 이 강의의 다음 편이 되는 셈이다. `trainer/train_pretrain.py`(사전학습) → `train_full_sft.py`(1단계 SFT) → `train_dpo.py`(사람 선호를 reward model 없이 직접 최적화하는 DPO) 또는 `train_ppo.py`/`train_grpo.py`(3단계의 RL. 이미 학습된 reward model을 불러와 점수만 매기므로, 순위 데이터로 reward model을 학습하는 2단계는 minimind에 없다). 이 학습 저장소의 로드맵 3부와 4부(InstructGPT, DPO, GRPO 논문)가 그것이다.
 :::
 
 ## 저장소 `gpt.py`와 강의의 차이 {#sec-diff}
 
 | 항목 | 강의 (영상) | `gpt.py` (커밋 `5220142`) |
 |---|---|---|
-| 초기화 | 기본 초기화 그대로 | `_init_weights`: Linear·Embedding을 N(0, 0.02)로, bias 0으로 (`gpt.py:149–158`). 주석에 "영상에서 다루지 않았고 후속 영상에서 다룰 것"이라 적혀 있다. README도 초기화를 다루지 못한 것이 아쉽고 그 때문에 수렴이 느리다고 밝힌다 |
+| 초기화 | 기본 초기화 그대로 | `_init_weights`: Linear·Embedding을 평균 0, 표준편차 0.02인 정규분포로, bias 0으로 (`gpt.py:149–158`). 주석에 "영상에서 다루지 않았고 후속 영상에서 다룰 것"이라 적혀 있다. README도 초기화를 다루지 못한 것이 아쉽고 그 때문에 수렴이 느리다고 밝힌다 |
 | attention 스케일 | 영상 1:20에서 `C**-0.5` (정정: head_size) | `k.shape[-1]**-0.5` (head_size) |
 | `FeedFoward` | — | 클래스 이름 오타가 그대로 있다 |
 | README | — | `_init_weights`가 추가되기 전 상태를 설명한다("코드는 영상과 거의 같다") |
@@ -501,17 +503,17 @@ minimind는 이 두 단계를 전부 코드로 갖고 있어서 이 강의의 �
 ## 이해 확인 질문
 
 1. block_size 8인 조각 하나에서 예제가 몇 개 나오고, 왜 문맥 길이 1짜리 예제도 학습하는가.
-2. `wei = tril / tril.sum(1, keepdim=True); wei @ x`가 "과거의 평균"인 이유를 3×3 예로 설명하라. `masked_fill(-inf)` + softmax가 같은 행렬을 주는 이유는.
+2. `wei = tril / tril.sum(1, keepdim=True); wei @ x`가 "과거의 평균"인 이유를 3×3 예로 설명하라. 점수 행렬이 전부 0일 때 `masked_fill(-inf)` + softmax가 같은 행렬을 주는 이유는.
 3. query, key, value를 카파시의 말로 각각 한 줄씩. `wei = q @ kᵀ`에서 왜 마지막 두 차원만 전치하나.
 4. `masked_fill` 줄을 지우면 무엇이 되고, 어떤 과제에 쓰는가. cross-attention에서는 q, k, v 중 무엇이 외부에서 오나.
-5. head_size 16일 때 `q @ kᵀ`의 분산이 대략 얼마이고, 스케일링을 안 하면 softmax에 무슨 일이 생기나.
+5. q, k의 성분이 독립이고 평균 0, 분산 1일 때 head_size 16인 `q @ kᵀ`의 분산은 대략 얼마이고, 스케일링을 안 하면 softmax에 무슨 일이 생기나.
 6. residual connection이 최적화를 돕는 이유를 micrograd의 덧셈 역전파 규칙으로 설명하라. 강의에서 residual 없이 block 3개를 쌓았을 때 무슨 일이 있었나.
 7. BatchNorm과 LayerNorm은 코드에서 정확히 무엇이 다른가(정규화 축). LayerNorm에 running buffer가 필요 없는 이유는. pre-norm은 논문과 무엇이 다른가.
-8. minimind의 `Attention`에서 이 강의와 같은 부분(스케일, causal mask, bias 없는 projection)과 다른 부분(RoPE, GQA, QK-norm) 세 가지를 들어라.
+8. minimind의 `Attention`에서 이 강의와 같은 부분(스케일, causal mask, bias 없는 Q/K/V projection)과 다른 부분(RoPE, GQA, QK-norm) 세 가지를 들어라.
 
 ## 연습문제 (영상 설명란 EX1–EX4) {#sec-exercises}
 
 - **EX1** n차원 텐서 숙달: `Head`와 `MultiHeadAttention`을 하나의 클래스로 합쳐 head를 또 하나의 배치 차원으로 두고 병렬 처리하라(답은 nanoGPT에 있다. minimind의 `Attention`도 그 방식이다).
-- **EX2** 원하는 데이터셋으로 GPT를 학습하라. 심화: 두 수의 덧셈 `a+b=c`를 배우게 하라. c의 자릿수를 거꾸로 예측하면 도움이 될 수 있다(덧셈 알고리즘이 오른쪽에서 왼쪽으로 가니까). 문제를 지정하는 `a+b` 자리의 loss는 `y=-1`로 마스킹하라(`F.cross_entropy(..., ignore_index=-1)`. 기본값은 −100이라 명시해야 한다). 더 나아가 +−×÷ 계산기를 만들어 보라. 쉽지 않고 chain of thought가 필요할 수 있다.
+- **EX2** 원하는 데이터셋으로 GPT를 학습하라. 심화: 두 수의 덧셈 `a+b=c`를 배우게 하라. c의 자릿수를 거꾸로 예측하면 도움이 될 수 있다(덧셈 알고리즘이 오른쪽에서 왼쪽으로 가니까). 데이터 로더가 임의의 덧셈 문제를 직접 만들어 주게 하면 nanoGPT의 `train.bin`/`val.bin` 생성을 건너뛸 수 있다. 문제를 지정하는 `a+b` 자리의 loss는 `y=-1`로 마스킹하라(`F.cross_entropy(..., ignore_index=-1)`. 기본값은 −100이라 명시해야 한다). 더 나아가 +−×÷ 계산기를 만들어 보라. 쉽지 않고 chain of thought가 필요할 수 있다.
 - **EX3** train과 val 사이에 간격이 안 보일 만큼 큰 데이터셋을 찾아 사전학습한 뒤, 그 모델로 초기화해 tiny shakespeare에 더 적은 스텝과 낮은 학습률로 미세조정하라. 사전학습으로 더 낮은 val loss를 얻을 수 있는가.
-- **EX4** Transformer 논문을 읽고 사람들이 쓰는 기능 하나를 구현해 보라. 성능이 좋아지는가. (minimind가 그 답의 목록이다. RoPE, RMSNorm, SwiGLU, GQA.)
+- **EX4** Transformer 관련 논문들을 읽고 사람들이 쓰는 기능 하나를 구현해 보라. 성능이 좋아지는가. (정리자 제안: minimind가 그 목록이다. RoPE, RMSNorm, SwiGLU, GQA.)

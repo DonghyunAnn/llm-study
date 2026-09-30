@@ -66,7 +66,7 @@ def decoder():
     b += f'      <path d="M 275,114 V 146 Q 275,154 267,154 H {cx+14}" fill="none" stroke="{MUTED}" stroke-width="1.2" marker-end="url(#arrow)"/>\n'
     b += f'      <circle cx="{cx}" cy="154" r="9" fill="{PAPER}" stroke="{INK}" stroke-width="1"/><text x="{cx}" y="158" fill="{INK}" font-size="12" font-family="{SANS}" text-anchor="middle">+</text>\n'
     b += varrow(163, 220); b += label(cx+62, 192, 'x (B,T,C)', w=60)
-    b += varrow(280, 320); b += label(cx+70, 300, '× n_layer', w=60)
+    b += varrow(280, 320)
     b += varrow(364, 380); b += varrow(424, 440)
     # zoom link from BLK to right panel (dashed)
     b += f'      <path d="M {MX+MW},250 H 352 Q 360,250 360,242 V 78 Q 360,70 368,70 H 400" fill="none" stroke="{MUTED}" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>\n'
@@ -149,11 +149,11 @@ def attention():
     b += node(*S, 'q @ kᵀ · hs^-0.5', 'affinity (B,T,T)', 'step')
     b += node(*M, 'masked_fill', 'tril==0 → −inf', 'step')
     b += node(*SM, 'softmax', '행마다 합 1 · 과거 가중치', 'focal')
-    b += node(*O, 'out = wei @ v', '(B,T,hs) · 가중 평균', 'focal')
+    b += node(*O, 'out = wei @ v', '(B,T,hs) · v의 가중합', 'focal')
     # mini matrix illustration of wei for T=4 below
     mx, my, c = 430, 344, 20
     vals = [[1,0,0,0],[.5,.5,0,0],[.33,.33,.33,0],[.25,.25,.25,.25]]
-    b += f'      <text x="{mx}" y="{my-8}" fill="{SOFT}" font-size="7" font-family="{MONO}" letter-spacing="0.14em">WEI · T = 4 · 균등 affinity일 때 (v1–v3의 평균)</text>\n'
+    b += f'      <text x="{mx}" y="{my-8}" fill="{SOFT}" font-size="7" font-family="{MONO}" letter-spacing="0.14em">WEI · T = 4 · 균등 affinity, dropout 전 (v1–v3의 평균)</text>\n'
     for i in range(4):
         for j in range(4):
             fval = vals[i][j]; fill = f'rgba(179,64,42,{0.05+0.35*fval:.2f})' if fval>0 else '#ffffff'
@@ -169,7 +169,7 @@ def attention():
     b += f'      <text x="40" y="{ly+6}" fill="{MUTED}" font-size="8" font-family="{MONO}" letter-spacing="0.18em">LEGEND</text>\n'
     b += f'      <rect x="40" y="{ly+16}" width="14" height="10" rx="2" fill="{ACCT}" stroke="{ACC}" stroke-width="1"/><text x="60" y="{ly+24}" fill="{MUTED}" font-size="8.5" font-family="{SANS}">통신이 일어나는 곳 (가중치 계산, 가중 합)</text>\n'
     b += f'      <rect x="300" y="{ly+16}" width="14" height="10" rx="2" fill="#ffffff" stroke="{INK}" stroke-width="1"/><text x="320" y="{ly+24}" fill="{MUTED}" font-size="8.5" font-family="{SANS}">토큰마다 독립인 선형 변환 (bias 없음)</text>\n'
-    b += f'      <text x="{W-40}" y="{ly+24}" fill="{MUTED}" font-size="8.5" font-family="{SANS}" font-style="italic" text-anchor="end">gpt.py Head.forward · Attention(Q,K,V) = softmax(QKᵀ/√d_k)V (Vaswani et al. 2017, 식 1) + causal mask · hs = head_size</text>\n'
+    b += f'      <text x="{W-40}" y="{ly+24}" fill="{MUTED}" font-size="8.5" font-family="{SANS}" font-style="italic" text-anchor="end">gpt.py Head.forward · Attention(Q,K,V) = softmax(QKᵀ/√d_k)V (Vaswani et al. 2017, 식 1) + causal mask · hs = head_size · dropout이 꺼진 eval 모드에서는 가중 평균</text>\n'
     html = page('Let\'s build GPT · self-attention head', 'Data flow · Let\'s build GPT', 'Self-attention head 하나: 무엇을 찾고, 무엇을 갖고, 무엇을 주나', 'attention-head',
                 'self-attention head 하나의 텐서 흐름', '입력 x에서 query, key, value를 각각 선형 변환으로 만들고, q와 k의 내적을 head_size의 제곱근으로 나눠 affinity를 얻고, 미래 위치를 −inf로 가린 뒤 softmax로 행마다 합이 1인 가중치를 만들어 value의 가중 평균을 출력한다.', b, W, H)
     open(os.path.join(HERE, 'attention-head.html'), 'w', encoding='utf-8').write(html)
